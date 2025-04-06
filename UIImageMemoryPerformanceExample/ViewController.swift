@@ -27,10 +27,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         
-        guard let image = info[.originalImage] as? UIImage else {
+        guard let imageURL = info[.imageURL] as? URL else {
             return
         }
-        uiImageView?.image = applyNoirFilterUsingUIGraphicsBeginImageContext(image: image)
+        uiImageView?.image = applyNoirFilterUsingCGImageSource(url: imageURL, imageViewSize: imageSize)
         dismiss(animated: true, completion: nil)
     }
     
@@ -43,22 +43,25 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         self.present(pickerController, animated: true, completion: nil)
     }
     
-    func applyNoirFilterUsingUIGraphicsBeginImageContext(image: UIImage) -> UIImage? {
-        guard let ciImage = CIImage(image: image) else { return nil }
-        
+    func applyNoirFilterUsingCGImageSource(url: URL, imageViewSize: CGSize) -> UIImage? {
+        guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let cgImage = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) else {
+            return nil
+        }
+        let ciImage = CIImage(cgImage: cgImage)
         let filter = CIFilter(name: "CIPhotoEffectNoir")
         filter?.setValue(ciImage, forKey: kCIInputImageKey)
-        
         guard let outputImage = filter?.outputImage else { return nil }
         let context = CIContext()
-        
-        if let cgImage = context.createCGImage(outputImage, from: outputImage.extent) {
-            let newSize = image.size
-            UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
-            UIImage(cgImage: cgImage).draw(in: CGRect(origin: .zero, size: newSize))
-            let filteredImage = UIGraphicsGetImageFromCurrentImageContext()
-            UIGraphicsEndImageContext()
-            return filteredImage
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: max(imageViewSize.width, imageViewSize.height)
+        ]
+        if let filteredCGImage = context.createCGImage(outputImage, from: outputImage.extent),
+           let filteredImageSource = CGImageSourceCreateWithData(UIImage(cgImage: filteredCGImage).pngData()! as CFData, nil),
+           let thumbnailCGImage = CGImageSourceCreateThumbnailAtIndex(filteredImageSource, 0, options as CFDictionary) {
+            return UIImage(cgImage: thumbnailCGImage)
         }
         return nil
     }
