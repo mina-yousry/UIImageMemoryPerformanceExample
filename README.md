@@ -1,6 +1,6 @@
 # UIImageMemoryPerformanceExample
 
-This repository contains a project demonstrating memory optimization techniques for image processing in iOS. Based on the techniques described in my [Medium article](https://medium.com/@mena.yousry94/mastering-memory-performance-in-ios-optimizing-image-processing-abc123), this example illustrates how to reduce memory usage when applying image filters by using memory-efficient methods such as `UIGraphicsImageRenderer` and managing memory regions effectively.
+This repository contains a project demonstrating memory optimization techniques for image processing in iOS. Based on the techniques described in my [Medium article](https://medium.com/@mena.yousry94/introduction-b5943a5da036), this example illustrates how to reduce memory usage when applying image filters by using memory-efficient methods such as `UIGraphicsImageRenderer` and managing memory regions effectively.
 
 ## Key Concepts
 
